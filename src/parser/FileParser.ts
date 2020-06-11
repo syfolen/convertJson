@@ -70,6 +70,9 @@ export class FileParser {
         if (type === "string[]" || type === "nstring[]") {
             return "string[]";
         }
+        if (type === "boolean") {
+            return "boolean";
+        }
         throw Error(`未知的TypeScript变量类型：${type}`);
     }
 
@@ -93,7 +96,19 @@ export class FileParser {
             const item: any = items.shift();
             const data: any = {};
             for (const key of keys) {
-                data[key] = item[key];
+                const index: number = keys.indexOf(key);
+                const type: string = types[index];
+                if (type === "boolean") {
+                    if (typeof item[key] === "string" && item[key].toLowerCase() === "true") {
+                        data[key] = true;
+                    }
+                    else {
+                        data[key] = this.$getDefaultValueByType(type);
+                    }
+                }
+                else {
+                    data[key] = item[key] || this.$getDefaultValueByType(type);
+                }
             }
             map[data.code] = data;
         }
@@ -135,5 +150,21 @@ export class FileParser {
             }
         }
         return array;
+    }
+
+    private $getDefaultValueByType(type: string): any {
+        if (type === "int") {
+            return 0;
+        }
+        if (type === "boolean") {
+            return false;
+        }
+        if (type === "string" || type === "nstring") {
+            return null;
+        }
+        if (type === "int[]" || type === "string[]" || type === "nstring") {
+            return [];
+        }
+        throw Error(`未知类型：${type}`);
     }
 }

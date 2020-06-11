@@ -64,6 +64,9 @@ var FileParser = /** @class */ (function () {
         if (type === "string[]" || type === "nstring[]") {
             return "string[]";
         }
+        if (type === "boolean") {
+            return "boolean";
+        }
         throw Error("\u672A\u77E5\u7684TypeScript\u53D8\u91CF\u7C7B\u578B\uFF1A" + type);
     };
     FileParser.prototype.$parseSheet = function (sheet) {
@@ -84,7 +87,19 @@ var FileParser = /** @class */ (function () {
             var data = {};
             for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
                 var key = keys_1[_i];
-                data[key] = item[key];
+                var index = keys.indexOf(key);
+                var type = types[index];
+                if (type === "boolean") {
+                    if (typeof item[key] === "string" && item[key].toLowerCase() === "true") {
+                        data[key] = true;
+                    }
+                    else {
+                        data[key] = this.$getDefaultValueByType(type);
+                    }
+                }
+                else {
+                    data[key] = item[key] || this.$getDefaultValueByType(type);
+                }
             }
             map[data.code] = data;
         }
@@ -124,6 +139,21 @@ var FileParser = /** @class */ (function () {
             }
         }
         return array;
+    };
+    FileParser.prototype.$getDefaultValueByType = function (type) {
+        if (type === "int") {
+            return 0;
+        }
+        if (type === "boolean") {
+            return false;
+        }
+        if (type === "string" || type === "nstring") {
+            return null;
+        }
+        if (type === "int[]" || type === "string[]" || type === "nstring") {
+            return [];
+        }
+        throw Error("\u672A\u77E5\u7C7B\u578B\uFF1A" + type);
     };
     return FileParser;
 }());
